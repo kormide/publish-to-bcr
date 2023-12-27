@@ -20,3 +20,24 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: yarn test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      # Authentication credentials shouldn't be needed as we stub the Secret Manager
+      # API service during integration tests. However, even though the client is overridden
+      # with a new endpoint (see src/infrastructure/secrets.ts), the client still requires
+      # a filled out application default credentials file to be present in order to work.
+      - uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: ">= 363.0.0"
+        # Run `info` to set up default credentials
+      - run: yarn install --frozen-lockfile
+      - run: yarn e2e
